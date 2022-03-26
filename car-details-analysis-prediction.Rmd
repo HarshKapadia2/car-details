@@ -1,0 +1,192 @@
+---
+title: "Car Details"
+author: "Harsh Kapadia"
+date: '2022-03-26'
+output: html_document
+---
+
+# Loading Data
+
+GitHub Repository: [HarshKapadia2/car-details](https://github.com/HarshKapadia2/car-details)
+
+## Load Data
+
+```{r}
+data <- read.csv("https://raw.githubusercontent.com/HarshKapadia2/car-details/main/data/car_details_v3.csv")
+head(data)
+```
+
+## Structure of Data
+
+```{r}
+str(data)
+```
+
+## Installing Packages
+
+```{r}
+install.packages("tidyverse", repos = "http://cran.us.r-project.org") # For `ggplot2` and `dplyr`
+install.packages("fansi", repos = "http://cran.us.r-project.org") # To solve `tidyverse` package error
+install.packages("plotrix", repos = "http://cran.us.r-project.org") # For 3d Pie Chart
+library(plotrix)
+library(tidyverse)
+```
+
+# Data Cleaning
+
+## Remove Incomplete Rows
+
+```{r}
+count(data)
+```
+
+```{r}
+sum(is.na(data))
+row_status <- complete.cases(data)
+data <- data[row_status,] # [row, column]
+sum(is.na(data))
+```
+
+```{r}
+count(data)
+```
+
+## Convert Engine Column from Character to Integer Vector
+
+```{r}
+str(data$engine)
+
+engine_chr_values <- strsplit(data$engine, split = " ", fixed = TRUE)
+engine_count <- length(engine_chr_values)
+new_engine_values <- vector()
+
+for (i in 1:engine_count) {
+  new_engine_values[i] <- strtoi(engine_chr_values[[i]][1])
+}
+
+data$engine <- new_engine_values
+str(data$engine)
+```
+
+## Convert Mileage Column from Character to Numeric Vector
+
+```{r}
+str(data$mileage)
+
+mileage_chr_values <- strsplit(data$mileage, split = " ", fixed = TRUE)
+mileage_count <- length(mileage_chr_values)
+new_mileage_values <- vector()
+
+for (i in 1:mileage_count) {
+  new_mileage_values[i] <- as.numeric(mileage_chr_values[[i]][1])
+}
+
+data$mileage <- new_mileage_values
+str(data$mileage)
+```
+
+## Convert Max Power Column from Character to Numeric Vector
+
+```{r}
+str(data$max_power)
+
+max_power_chr_values <- strsplit(data$max_power, split = " ", fixed = TRUE)
+max_power_count <- length(max_power_chr_values)
+new_max_power_values <- vector()
+
+for (i in 1:max_power_count) {
+  new_max_power_values[i] <- as.numeric(max_power_chr_values[[i]][1])
+}
+
+data$max_power <- new_max_power_values
+str(data$max_power)
+```
+
+# Visualising Data
+
+## Histogram
+
+```{r}
+hist(data$seats, main = "No. of Seats vs No. of Cars", xlab = "No. of Seats", ylab = "No. of Cars")
+```
+
+## Box Plot
+
+```{r}
+temp_data <- data %>%
+  select(selling_price, seats) %>%
+  filter(selling_price < 200000)
+
+boxplot(temp_data$selling_price ~ temp_data$seats, main = "No. of Seats vs Selling Price", xlab = "No. of Seats", ylab = "Selling Price (Rs)")
+```
+
+## Pie Chart
+
+```{r}
+fuel_count = data %>% count(fuel)
+pie(fuel_count$n, labels = fuel_count$fuel, radius = 1, col = c("orange", "blue", "yellow", "dark green"), main = "Fuel Type")
+```
+
+## 3D Pie Chart
+
+```{r}
+transmission_count = data %>% count(transmission)
+pie3D(transmission_count$n, labels = transmission_count$transmission, radius = 1, col = c("yellow", "blue"), explode = 0.4, main = "Transmission Type")
+```
+
+## Bar Plot
+
+```{r}
+barplot(table(data$seller_type), main = "Seller Type vs No. of Cars")
+```
+
+## Scatter Plot
+
+```{r}
+graph_data_1 <- data %>%
+  select(selling_price, km_driven) %>%
+  filter(selling_price < 5000000, km_driven < 400000)
+
+ggplot(graph_data_1, aes(x = selling_price, y = km_driven)) + geom_point() + geom_smooth() + labs(title = "Selling Price vs Distance Driven", x = "Selling Price (Rs)", y = "Distance Driven (km)")
+```
+
+## Line Plot
+
+```{r}
+graph_data_2 <- data %>%
+  select(selling_price, km_driven) %>%
+  filter(selling_price > 2000000, km_driven < 400000)
+
+ggplot(graph_data_2, aes(x = selling_price, y = km_driven)) +
+  stat_summary(fun.y = "mean", geom = "line", size = 1, linetype = "solid") +
+  labs(title = "Selling Price vs Distance Driven", x = "Selling Price (Rs)", y = "Distance Driven (km)")
+```
+
+## Bar Chart
+
+```{r}
+ggplot(data, aes(x = fuel, fill = owner)) + geom_bar() + labs(title = "Fuel Type vs No. of Cars vs Owner", x = "Fuel Type", y = "No. of Cars", fill = "Owner")
+```
+
+## Dot Plot
+
+```{r}
+ggplot(data, aes(x = seats, y = fuel)) + geom_point(col = "red", size = 5) +
+  geom_segment(aes(x = min(seats), xend = max(seats), y = fuel, yend = fuel), linetype = "dashed", size = 0.1) +
+  labs(title = "No. of Seats vs Fuel Type", x = "No. of Seats", y = "Fuel Type")
+```
+
+## Smooth Plot
+
+```{r}
+graph_data <- data %>%
+  select(mileage, engine)
+
+ggplot(graph_data, aes(x = engine, y = mileage)) + geom_smooth() + labs(title = "Engine Capacity vs Car Mileage", x = "Engine Capacity (cc)", y = "Car Mileage (km/L)")
+```
+
+## Density Plot
+
+```{r}
+ggplot(data, aes(mileage)) + geom_density(aes(fill = fuel), alpha = 0.3) + labs(title = "Car Mileage vs Density vs Fuel Type", x = "Car Mileage (km/L)", y = "Density", fill = "Fuel Type")
+```
