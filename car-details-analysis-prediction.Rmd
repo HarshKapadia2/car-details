@@ -25,8 +25,10 @@ str(data)
 ## Installing Packages
 
 ```{r}
-install.packages("tidyverse", repos = "http://cran.us.r-project.org") # For `ggplot2` and `dplyr`
-install.packages("fansi", repos = "http://cran.us.r-project.org") # To solve `tidyverse` package error
+# install.packages("tidyverse", repos = "http://cran.us.r-project.org") # For `ggplot2` and `dplyr`
+install.packages("ggplot2", repos = "http://cran.us.r-project.org")
+install.packages("dplyr", repos = "http://cran.us.r-project.org")
+# install.packages("fansi", repos = "http://cran.us.r-project.org") # To solve `tidyverse` package error
 install.packages("plotrix", repos = "http://cran.us.r-project.org") # For 3d Pie Chart
 library(plotrix)
 library(tidyverse)
