@@ -30,8 +30,10 @@ install.packages("ggplot2", repos = "http://cran.us.r-project.org")
 install.packages("dplyr", repos = "http://cran.us.r-project.org")
 # install.packages("fansi", repos = "http://cran.us.r-project.org") # To solve `tidyverse` package error
 install.packages("plotrix", repos = "http://cran.us.r-project.org") # For 3d Pie Chart
+library(ggplot2)
+library(dplyr)
 library(plotrix)
-library(tidyverse)
+# library(tidyverse)
 ```
 
 # Data Cleaning
