@@ -36,7 +36,7 @@ library(plotrix)
 # library(tidyverse)
 ```
 
-# Data Cleaning
+# Data Cleaning and Processing
 
 ## Remove Incomplete Rows
 
@@ -104,6 +104,199 @@ for (i in 1:max_power_count) {
 
 data$max_power <- new_max_power_values
 str(data$max_power)
+```
+
+## Data for Prediction
+
+### Select Numeric Data
+
+```{r}
+pred_data <- data %>% select(selling_price, km_driven, owner, year, fuel, seller_type, transmission, mileage, engine)
+```
+
+### Calculate Age
+
+```{r}
+year_count <- length(pred_data$year)
+age <- vector()
+
+for (i in 1:year_count) {
+  age[i] <- 2020 - pred_data$year[i]
+}
+
+pred_data <- cbind(pred_data, age)
+str(pred_data$age)
+```
+```{r}
+pred_data <- subset(pred_data, select = -year)
+str(pred_data)
+```
+
+### Convert Fuel Types to Binary
+
+`1` = `Petrol`
+
+`0` = `Diesel`
+
+```{r}
+pred_data %>% count(fuel)
+```
+
+```{r}
+pred_fuel_count <- length(pred_data$fuel)
+
+for (i in 1:pred_fuel_count) {
+  temp_val <- trimws(pred_data$fuel[i])
+
+  if(temp_val %in% "CNG") {
+    pred_data <- pred_data[-c(i),]
+  }
+  else if(temp_val %in% "LPG") {
+    pred_data <- pred_data[-c(i),]
+  }
+}
+
+pred_data %>% count(fuel)
+```
+
+```{r}
+fuel_type <- vector() # 1 = Petrol, 0 = Diesel
+pred_fuel_count <- length(pred_data$fuel)
+
+for(i in 1:pred_fuel_count) {
+  if(pred_data$fuel[i] %in% "Petrol") {
+    fuel_type[i] <- 1
+  }
+  else {
+    fuel_type[i] <- 0
+  }
+}
+
+pred_data <- cbind(pred_data, fuel_type)
+pred_data <- subset(pred_data, select = -fuel)
+
+str(pred_data)
+```
+
+### Convert Transmission Types to Binary
+
+`1` = `Manual`
+
+`0` = `Automatic`
+
+```{r}
+pred_data %>% count(transmission)
+```
+
+```{r}
+transmission_type <- vector() # 1 = Manual, 0 = Automatic
+transmission_count <- length(pred_data$transmission)
+
+for(i in 1:transmission_count) {
+  if(pred_data$transmission[i] %in% "Manual") {
+    transmission_type[i] <- 1
+  }
+  else {
+    transmission_type[i] <- 0
+  }
+}
+
+pred_data <- cbind(pred_data, transmission_type)
+pred_data <- subset(pred_data, select = -transmission)
+
+str(pred_data)
+```
+
+### Convert Seller Types to Binary
+
+`1` = `Individual`
+
+`0` = `Dealer`
+
+```{r}
+pred_data %>% count(seller_type)
+```
+
+```{r}
+seller_count <- length(pred_data$seller_type)
+
+for (i in 1:seller_count) {
+  temp_val <- trimws(pred_data$seller_type[i])
+
+  if(temp_val %in% "Trustmark Dealer") {
+    pred_data <- pred_data[-c(i),]
+  }
+}
+
+pred_data %>% count(seller_type)
+```
+
+```{r}
+seller_type <- vector() # 1 = Individual, 0 = Dealer
+seller_count <- length(pred_data$seller_type)
+
+for(i in 1:seller_count) {
+  if(pred_data$seller_type[i] %in% "Individual") {
+    seller_type[i] <- 1
+  }
+  else {
+    seller_type[i] <- 0
+  }
+}
+
+pred_data <- subset(pred_data, select = -seller_type)
+pred_data <- cbind(pred_data, seller_type)
+
+str(pred_data)
+```
+
+### Convert Owner Types to Binary
+
+`1` = `First Owner`
+
+`0` = `Second Owner`
+
+```{r}
+pred_data %>% count(owner)
+```
+
+```{r}
+owner_count <- length(pred_data$owner)
+
+for (i in 1:owner_count) {
+  temp_val <- trimws(pred_data$owner[i])
+
+  if(temp_val %in% "Fourth & Above Owner") {
+    pred_data <- pred_data[-c(i),]
+  }
+  else if(temp_val %in% "Third Owner") {
+    pred_data <- pred_data[-c(i),]
+  }
+  else if(temp_val %in% "Test Drive Car") {
+    pred_data <- pred_data[-c(i),]
+  }
+}
+
+pred_data %>% count(owner)
+```
+
+```{r}
+owner_type <- vector() # 1 = First Owner, 0 = Second Owner
+owner_count <- length(pred_data$owner)
+
+for(i in 1:owner_count) {
+  if(pred_data$owner[i] %in% "First Owner") {
+    owner_type[i] <- 1
+  }
+  else {
+    owner_type[i] <- 0
+  }
+}
+
+pred_data <- cbind(pred_data, owner_type)
+pred_data <- subset(pred_data, select = -owner)
+
+str(pred_data)
 ```
 
 # Visualising Data
@@ -193,4 +386,27 @@ ggplot(graph_data, aes(x = engine, y = mileage)) + geom_smooth() + labs(title = 
 
 ```{r}
 ggplot(data, aes(mileage)) + geom_density(aes(fill = fuel), alpha = 0.3) + labs(title = "Car Mileage vs Density vs Fuel Type", x = "Car Mileage (km/L)", y = "Density", fill = "Fuel Type")
+```
+
+# Prediction
+
+## Simple Linear Regression
+
+```{r}
+plot(pred_data$engine, pred_data$mileage, xlab = "Engine Capacity (cc)", ylab = "Mileage (km/L)")
+abline(lm(mileage ~ engine, data = pred_data), col = "red", lwd = 3)
+title(main = "Engine Capacity vs Mileage")
+```
+
+```{r}
+plot(pred_data$age, pred_data$mileage, xlab = "Age (yr)", ylab = "Mileage (km/L)")
+abline(lm(mileage ~ age, data = pred_data), col = "red", lwd = 3)
+title(main = "Age vs Mileage")
+```
+
+## Multiple Linear Regression
+
+```{r}
+mlr <- lm(selling_price ~ km_driven + owner_type + age + fuel_type + seller_type + transmission_type + mileage + engine, data = pred_data)
+summary(mlr)
 ```
